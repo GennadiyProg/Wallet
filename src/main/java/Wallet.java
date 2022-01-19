@@ -13,19 +13,22 @@ public class Wallet {
     public static void addPayment(String payment){
         Matcher matcher = Pattern.compile("(?<currency>\\w+)(?:\\s+(?<money>-?\\w+))?").matcher(payment);
         if (matcher.find()){
-            if (matcher.group("currency").equals("quit")) System.exit(1);
-            if (matcher.group("currency").length() != 3){
-                System.out.printf("Incorrect currency: %s\n", matcher.group("currency"));
+            String currency = matcher.group("currency");
+            String moneyGroup = matcher.group("money");
+            if (currency.equals("quit")) System.exit(1);
+            if (currency.length() != 3){
+                System.out.printf("Incorrect currency: %s\n", currency);
                 return;
             }
             try{
-                long money = Long.parseLong(matcher.group("money"));
-                String currency = matcher.group("currency").toUpperCase();
+                long money = Long.parseLong(moneyGroup);
+                currency = currency.toUpperCase();
                 if (wallet.containsKey(currency)) {
-                    if (wallet.get(currency) + money < 0) {
+                    long balance = wallet.get(currency) + money;
+                    if (balance < 0) {
                         System.out.println("Not enough money!");
                     } else {
-                        wallet.computeIfPresent(currency, (k, v) -> v + money);
+                        wallet.replace(currency, balance);
                     }
                 } else {
                     if (money < 0){
@@ -35,7 +38,7 @@ public class Wallet {
                     }
                 }
             } catch (NumberFormatException e){
-                System.out.printf("Wrong number: %s\n", matcher.group("money"));
+                System.out.printf("Wrong number: %s\n", moneyGroup);
             }
         }
     }
@@ -56,7 +59,7 @@ public class Wallet {
                     if (v != 0) System.out.println(k + " " + v);
                 });
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(60000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
